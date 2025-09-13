@@ -27,6 +27,7 @@ def generateGraphNodeImports():
 from celery import Celery
 from openai import OpenAI
 from google import genai
+from dotenv import load_dotenv 
 import base64
 from google.genai import types
 from pydantic import BaseModel
@@ -40,6 +41,9 @@ import uuid
 
 import requests
 import json
+
+GEMINI_API_KEY=os.environ.get("GEMINI_API_KEY")
+OPENAI_API_KEY=os.environ.get("OPENAI_API_KEY")
 """
 
 def databaseSetup():
@@ -54,6 +58,7 @@ from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy import text
 from pgvector.sqlalchemy import Vector 
 from sqlalchemy.dialects.postgresql import JSONB
+
 
 
 Base = declarative_base()
@@ -82,7 +87,7 @@ class Logs(Base):
 def generateInsertEmbeddingCode():
     return """
 def generateEmbeddings(text: str):
-    client = OpenAI()
+    client = OpenAI(api_key=OPENAI_API_KEY)
     response = client.embeddings.create(
         input=text,
         model="text-embedding-3-small"
@@ -93,10 +98,8 @@ def generateEmbeddings(text: str):
 def insertEmbedding(input: str, output: str, prompt: str, node_id: int):
     try:
         with SessionLocal() as session:
-            # Generate embedding
             embedding = generateEmbeddings(input)
             
-            # Create memory row
             memoryRow = Memory(
                 input=input,
                 output=output,
@@ -104,7 +107,6 @@ def insertEmbedding(input: str, output: str, prompt: str, node_id: int):
                 embedding=embedding
             )
             
-            # Create logging row
             loggingRow = Logs(
                 name="embedding",
                 node_id=node_id,
@@ -113,14 +115,11 @@ def insertEmbedding(input: str, output: str, prompt: str, node_id: int):
                 status="success"
             )
             
-            # Add both rows to session
             session.add(loggingRow)
             session.add(memoryRow)
             
-            # Commit once
             session.commit()
             
-            # Refresh
             session.refresh(loggingRow)
             session.refresh(memoryRow)
             
@@ -384,7 +383,7 @@ def generateDecisionTextGeminiNodeCode(workflowId:str, nodeId: str, systemPrompt
                     contents.append(types.Content(role="user", parts=[function_response_part]))
 """
     return f"""
-client = genai.Client(api_key="{apiKey}")
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 config = types.GenerateContentConfig(
     tools={functionListDeclarations},
@@ -497,10 +496,10 @@ def executeAgentWorkflow(request: InputSchema):
         print(e)
         raise Exception(e)
 
-@app.get("/test")
-def test():
+@app.get("/health")
+def health():
     try:
-        return { "message": "Hi HackTheNorth!"}
+        return {{ "message": "Hi HackTheNorth! The container is healthy!"}}
     except Exception as e:
         raise Exception(e)
 """

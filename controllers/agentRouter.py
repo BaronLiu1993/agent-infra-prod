@@ -128,6 +128,7 @@ def generateMainLayer(request: GenerateMainRequest):
         controllerLayer += generateControllerMethod()
         return controllerLayer
     except Exception as e:
+        print(e)
         raise Exception(e)
     
 @router.post("/generate-documentation")

@@ -6,6 +6,9 @@ from openai import OpenAI
 load_dotenv()
 ACCESS = os.environ.get("DIGITALOCEAN_ACCESS")
 SSH_KEY=os.environ.get("DIGITALOCEAN_SSH_FINGERPRINT")
+OPENAI_KEY=os.environ.get("GEMINI_API_KEY")
+GEMINI_KEY=os.environ.get("OPENAI_API_KEY")
+
 
 #Start Up Script is Slow so we need to speeden it up
 def createDroplet(name: str, userName: str, repoName: str, postgresUser: str, postgresPassword: str):
@@ -103,6 +106,8 @@ Requires=docker.service
 [Service]
 User=root
 WorkingDirectory=/opt/app
+Environment=OPENAI_API_KEY={OPENAI_KEY}
+Environment=GEMINI_API_KEY={GEMINI_KEY}
 ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8000
 Restart=always
 
@@ -162,15 +167,6 @@ def retrieveDropletData(dropletId: str):
     except Exception as e:
         print(e)
         return { "message": "Internal Server Error", "success": False}
-
-#Generate Embeddings for Input, Output and Prompts Given
-def generateEmbeddings(text: str):
-    client = OpenAI()
-    response = client.embeddings.create(
-        input=text,
-        model="text-embedding-3-small"
-    )
-    return response.data[0].embedding
 
     
 
