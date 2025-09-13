@@ -56,6 +56,7 @@ def buildCICDPipeline(pipelineDetails: ConfigureCICDRepoRequest):
 
 @router.post("/create-repo")
 def generateRepo(RepoDetails: GenerateRepoRequest):
+    print(RepoDetails)
     try:
         response = createRepository(RepoDetails.name)
         return response

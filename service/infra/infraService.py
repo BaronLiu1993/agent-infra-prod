@@ -14,7 +14,7 @@ def createDroplet(name: str, userName: str, repoName: str, postgresUser: str, po
         req = {
             "name": name,
             "region": "tor1",
-            "size": "s-1vcpu-1gb",
+            "size": "s-2vcpu-4gb",
             "image": "docker-20-04",  
             "backups": False,
             "ipv6": False,
@@ -22,7 +22,7 @@ def createDroplet(name: str, userName: str, repoName: str, postgresUser: str, po
             "monitoring": False,
             "tags": ["fastapi", "demo"],
             "user_data": f"""#!/bin/bash
-apt-get update -y && apt-get install -y git python3-pip docker-compose
+apt-get update -y && apt-get install -y git python3-pip docker-compose-plugin
 
 mkdir -p /opt/app
 cd /opt/app
@@ -52,37 +52,14 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-  prometheus:
-    container_name: prometheus
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
 
 volumes:
   postgres_data:
   redis_data:
 EOL
 
-cat <<EOL > /opt/app/prometheus.yml
-global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
-
-scrape_configs:
-  - job_name: 'postgres'
-    static_configs:
-      - targets: ['postgres-exporter:9187']
-
-  - job_name: 'fastapi'
-    static_configs:
-      - targets: ['fastapi:8001']
-EOL
-
 cd /opt/app
-docker-compose up -d
-echo "Waiting for Postgres to accept connections..."
+docker compose up -d
 
 for i in {{1..20}}; do
     if docker exec -i postgres pg_isready -U {postgresUser} -d agentinfradb >/dev/null 2>&1; then

@@ -475,7 +475,7 @@ def connectAgents(functions: List[Dict[str, Any]]):
         functionDefinition += f"    {f['variable']} = {f['name']}({f['parameter']})\n"
     
     functionDefinition += "    return {" + ", ".join(f"'{f['variable']}': {f['variable']}" for f in functions) + "}\n"
-    
+
     return functionDefinition
 
         
@@ -489,9 +489,18 @@ class InputSchema(BaseModel):
 
 @app.post("/execute-agent-workflow")
 def executeAgentWorkflow(request: InputSchema):
+    print(request)
     try:
         response = executeAgents(request.initialInput)
         return response
+    except Exception as e:
+        print(e)
+        raise Exception(e)
+
+@app.get("/test")
+def test():
+    try:
+        return { "message": "Hi HackTheNorth!"}
     except Exception as e:
         raise Exception(e)
 """

@@ -32,10 +32,11 @@ def createRepository(name: str):
         g=Github(auth=auth)
         user = g.get_user()
         repoCode = uuid.uuid4()
-        repo = user.create_repo(f"{name}-${repoCode}", private = True)
+        repo = user.create_repo(f"{name}-${repoCode}", private = False)
         print(repo)
-        return { "message": "Successfully Created Repo", "success": True}
+        return { "message": "Successfully Created Repo", "success": True, "data": repo.full_name}
     except Exception as e:
+        print(e)
         return { "message": "Internal Server Error", "success": False}
 
 def listFiles(path: str, repo_name: str):
@@ -93,7 +94,6 @@ def updateFile(newCode: str, commitMessage: str, path: str, repoName: str, githu
             content = newCode,
             sha=file.sha
         )
-        print(response)
         return {"message": "Pushed Successfully", "success": True}     
     except Exception as e:
         print(e)
