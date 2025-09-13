@@ -10,6 +10,7 @@ import json
 load_dotenv()
 
 GEMINI_API_KEY= os.environ.get("GEMINI_API_KEY")
+OPENAI_API_KEY=os.environ.get("OPENAI_API_KEY")
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 """
@@ -17,24 +18,21 @@ Starting here the service layer is being generated and compiled for the agentic 
 1. Starting with Generating Imports and Configuration For Memories and Logging
 """
 
-
 class Prompt(BaseModel):
     prompt: str
     strategies: List[str]
 
 def generateGraphNodeImports():
-    return """
+    return f"""
 from celery import Celery
 from openai import OpenAI
 from google import genai
-from dotenv import load_dotenv 
 import base64
 from google.genai import types
 from pydantic import BaseModel
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import Column, Integer, String
-from prometheus_fastapi_instrumentator import Instrumentator
 from typing import Dict, Any
 from datetime import datetime
 import uuid
@@ -42,8 +40,8 @@ import uuid
 import requests
 import json
 
-GEMINI_API_KEY=os.environ.get("GEMINI_API_KEY")
-OPENAI_API_KEY=os.environ.get("OPENAI_API_KEY")
+GEMINI_API_KEY={GEMINI_API_KEY}
+OPENAI_API_KEY={OPENAI_API_KEY}
 """
 
 def databaseSetup():
@@ -93,7 +91,7 @@ def generateEmbeddings(text: str):
     return response.data[0].embedding
 
 
-def insertEmbedding(input: str, output: str, prompt: str, node_id: int):
+def insertEmbedding(input: str, output: str, prompt: str, node_id: str):
     try:
         with SessionLocal() as session:
             embedding = generateEmbeddings(input)
@@ -106,8 +104,7 @@ def insertEmbedding(input: str, output: str, prompt: str, node_id: int):
             )
             
             loggingRow = Logs(
-                name="embedding",
-                node_id=node_id,
+                name=node_id,
                 data={"input": input, "output": output, "prompt": prompt},
                 log_type="embedding",
                 status="success"
@@ -157,17 +154,17 @@ def retrieve_memories(thought: str, number_of_memories: int):
 #Do Two Example One For Healthcare and One for Finance
 def generateLoggingWrappers():
     return """
-def insertLoggingData(name, nodeId, data: Dict[str, Any], logType: str):
+def insertLoggingData(nodeId, data: Dict[str, Any], logType: str):
     try:
         with SessionLocal() as session:
-            loggingRow = Logs(name=name, node_id=nodeId, data=data, log_type=logType, status="success")
+            loggingRow = Logs(name=nodeId, data=data, log_type=logType, status="success")
             session.add(loggingRow)
             session.commit()
             session.refresh(loggingRow)
             return { "success": True, "message": "Successully Inserted"}
     except Exception as e:
         with SessionLocal() as session:
-            loggingRow = Logs(name=name, node_id=nodeId, data=data, log_type=logType, status="failed")
+            loggingRow = Logs(name=nodeId, data=data, log_type=logType, status="failed")
             session.add(loggingRow)
             session.commit()
             session.refresh(loggingRow)   
@@ -243,24 +240,24 @@ def {nodeId}({rendered_parameters}):
             "id": id,
             "workflow_id": "{workflowId}",
             "endpoint": "{rendered_url}",
-            "executed": timestamp,
+            "executed": timestamp.isoformat(),
             "environment": "production",
             "status_code": response.status_code,
-            "headers": response.headers,
+            "headers": dict(response.headers),
         }}
-        insertLoggingData("API", "{nodeId}", data, "POST METHOD")
+        insertLoggingData("{nodeId}", data, "POST API METHOD")
         return response.json()
     except Exception as e:
         data = {{
             "id": id,
             "workflow_id": "{workflowId}",
             "endpoint": "{rendered_url}",
-            "executed": timestamp,
+            "executed": timestamp.isoformat(),
             "environment": "production",
             "status_code": response.status_code,
-            "headers": response.headers,
+            "headers": dict(response.headers),
         }}
-        insertLoggingData("API", "{nodeId}", data, "GET METHOD")
+        insertLoggingData("{nodeId}", data, "POST API METHOD")
         raise Exception(e)
 """
 
@@ -284,23 +281,23 @@ def {nodeId}({rendered_parameters}):
             "id": id,
             "workflow_id": {workflowId},
             "endpoint": {rendered_url},
-            "executed": timestamp,
+            "executed": timestamp.isoformat(),
             "environment": "production",
             "status_code": response.status_code,
-            "headers": response.headers,
+            "headers": dict(response.headers),
         }}
-        insertLoggingData("API", "{nodeId}", data, "DELETE METHOD")
+        insertLoggingData("{nodeId}", data, "DELETE API METHOD")
         return response.json()
     except Exception as e:
         data = {{
             "id": id,
             "endpoint": {rendered_url},
-            "executed": timestamp,
+            "executed": timestamp.isoformat(),
             "environment": "production",
             "status_code": response.status_code,
-            "headers": response.headers,
+            "headers": dict(response.headers),
         }}
-        insertLoggingData("API", "{nodeId}", data, "DELETE", "SUCCESS")
+        insertLoggingData("{nodeId}", data, "DELETE API METHOD")
         raise Exception(e)
 """
 
@@ -326,12 +323,12 @@ def {nodeId}({rendered_parameters}):
             "id": id,
             "workflow_id": "{workflowId}",
             "endpoint": "{rendered_url}",
-            "executed": timestamp,
+            "executed": timestamp.isoformat(),
             "environment": "production",
             "status_code": response.status_code,
-            "headers": response.headers,
+            "headers": dict(response.headers),
         }}
-        insertLoggingData("API", "{nodeId}", data, "GET METHOD")
+        insertLoggingData("{nodeId}", data, "GET METHOD")
         return response.json()
     except Exception as e:
         data = {{
@@ -341,9 +338,9 @@ def {nodeId}({rendered_parameters}):
                 "executed": timestamp,
                 "environment": "production",
                 "status_code": response.status_code,
-                "headers": response.headers,
+                "headers": dict(response.headers),
             }}
-        insertLoggingData("API", "{nodeId}", data, "GET METHOD")
+        insertLoggingData("{nodeId}", data, "GET METHOD")
         raise Exception(e)
 """
 
@@ -410,7 +407,7 @@ def {nodeId}(modelInput = ""):
                 "tokens_in": response.usage_metadata.prompt_token_count,
                 "token_out": response.usage_metadata.candidates_token_count,
                 "token_total": response.usage_metadata.total_token_count,
-                "executed": timestamp,
+                "executed": timestamp.isoformat(),
                 "environment": "production",
                 "status_code": 200,
                 "prompt": "{systemPrompt + prompt}",
@@ -418,8 +415,8 @@ def {nodeId}(modelInput = ""):
                 "output": response.text,
                 "response_size": len(response.text.encode("utf-8"))
             }}
-        insertLoggingData("LLM", "{nodeId}", data, "LLM Method")
-        insertEmbedding(modelInput, response.text, "{systemPrompt + prompt}") 
+        insertLoggingData("{nodeId}", data, "Agent")
+        insertEmbedding(modelInput, response.text, "{systemPrompt + prompt}", "{nodeId}") 
         finalResponse = client.models.generate_content(
             model="{model}",
             config=config,
@@ -427,6 +424,7 @@ def {nodeId}(modelInput = ""):
         )
         return finalResponse.text
     except Exception as e:
+        insertLoggingData("{nodeId}", data, "Agent")
         raise Exception(e)
 """
 

@@ -1,7 +1,6 @@
 from pydo import Client
 import os
 from dotenv import load_dotenv
-from openai import OpenAI
 
 load_dotenv()
 ACCESS = os.environ.get("DIGITALOCEAN_ACCESS")
@@ -97,11 +96,6 @@ CREATE TABLE IF NOT EXISTS memory (
 
 EOSQL
 
-cat > /opt/app/.env <<EOL
-OPENAI_API_KEY={OPENAI_KEY}
-GEMINI_API_KEY={GEMINI_KEY}
-EOL
-
 cat <<EOL > /etc/systemd/system/fastapi.service
 [Unit]
 Description=Agent Infrastructure
@@ -111,7 +105,6 @@ Requires=docker.service
 [Service]
 User=root
 WorkingDirectory=/opt/app
-EnvironmentFile=/opt/app/.env
 ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8000
 Restart=always
 
