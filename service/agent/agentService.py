@@ -48,7 +48,7 @@ OPENAI_API_KEY=os.environ.get("OPENAI_API_KEY")
 
 def databaseSetup():
     return """
-engine = create_engine("postgresql://postgres:@localhost:5432/test")
+engine = create_engine("postgresql://demo:demo123@localhost:5432/agentinfradb")
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
@@ -58,8 +58,6 @@ from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy import text
 from pgvector.sqlalchemy import Vector 
 from sqlalchemy.dialects.postgresql import JSONB
-
-
 
 Base = declarative_base()
 
@@ -445,7 +443,7 @@ from pydantic import BaseModel
 """
     for service in serviceImports:
         configuration += f"""
-from service.{service}Layer import {service}
+from service.{service} import {service}
 """
     configuration += f"""
 app = FastAPI()
