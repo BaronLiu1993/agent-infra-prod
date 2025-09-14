@@ -21,7 +21,6 @@ def generateDocumentation(code: str, documentationLanguage: str, sampleCodingLan
                 "response_schema": list[DocumentationOutput]
             }
         )
-
         return { "message": "Successfully Generated Documentation", "success": True, "data": response}
     except Exception as e:
         return { "message": "Internal Server Error", "success": False}

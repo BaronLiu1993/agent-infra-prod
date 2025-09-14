@@ -19,7 +19,7 @@ from service.agent.agentService import (
     generateSchema,
     generateVideoGeminiNodeCode,
     generateImageControllerMethod,
-    generatePictureGeminiNodeCode
+    generateImageGeminiNodeCode
 )
 from service.databricks.databricksService import (
     dumpDataInDatabricks
@@ -125,8 +125,8 @@ def generateServiceLayer(request: GenerateServiceRequest):
                     nodeId=node.get("nodeId"),
                     prompt=node.get("prompt", ""),
                 )
-            elif node_type == "Image":
-                agentWorkflowScript += generatePictureGeminiNodeCode(
+            elif node_type == "DecisionImage":
+                agentWorkflowScript += generateImageGeminiNodeCode(
                     workflowId=node.get("workflowId"),
                     nodeId=node.get("nodeId"),
                     prompt=node.get("prompt", ""),

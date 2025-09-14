@@ -435,7 +435,7 @@ Starting here the controller layer is being compiled
 """
 
 
-def generatePictureGeminiNodeCode(workflowId:str, nodeId: str, prompt: str):
+def generateImageGeminiNodeCode(workflowId:str, nodeId: str, prompt: str):
     return f"""
 def {nodeId}(modelInput = ""):
     timestamp = datetime.now()
@@ -462,7 +462,7 @@ def {nodeId}(modelInput = ""):
             }}
         insertLoggingData("{nodeId}", data, "Video Agent")
         insertEmbedding(modelInput, response.text, "{prompt}", "{nodeId}") 
-        return finalResponse.text
+        return response
     except Exception as e:
         insertLoggingData("{nodeId}", data, "Agent")
         raise Exception(e)
@@ -519,7 +519,7 @@ def {nodeId}(modelInput = ""):
         insertLoggingData("{nodeId}", data, "Video Agent")
         insertEmbedding(modelInput, response.text, "{prompt}", "{nodeId}") 
         download_url = f"https://drive.google.com/uc?export=download&id=1cvIDTGgqJt69tz1GZx3d2TMCmfSCp9Lh"
-        response = requests.get(download_url, stream=True)
+        return download
     except Exception as e:
         insertLoggingData("{nodeId}", data, "Video Agent")
         raise Exception(e)
