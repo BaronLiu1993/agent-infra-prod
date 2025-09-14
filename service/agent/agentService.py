@@ -439,7 +439,7 @@ def generateImageGeminiNodeCode(workflowId:str, nodeId: str, prompt: str):
 def {nodeId}(modelInput = ""):
     timestamp = datetime.now()
     try:
-        response = multimodal_client.models.generate_images(
+        response = client.models.generate_images(
             model='imagen-4.0-fast-generate-001',
             prompt="Generate me an indian shopify intern.",
             config=types.GenerateImagesConfig(
@@ -472,7 +472,7 @@ def generateVideoGeminiNodeCode(workflowId:str, nodeId: str, prompt: str):
     MESSAGE TO JUDGE: In the interest of not losing all my money I am hardcoding this. It actually costs too much.
     :(
 
-        operation = multimodal_client.models.generate_videos(
+        operation = _client.models.generate_videos(
             model="veo-3.0-generate-001",
             prompt=(
                 "A tutorial-style knowledge transfer video about: {prompt}. "
