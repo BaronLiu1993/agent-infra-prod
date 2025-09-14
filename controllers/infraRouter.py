@@ -31,9 +31,9 @@ def createVM(DropletDetails: GenerateDropletRequest):
         raise Exception(e)
 
 @router.get("/get-droplet")
-def getDroplet(DropletData: DropletDataRequest):
+def getDroplet(dropletId: str):
     try:
-        response = retrieveDropletData(DropletData.dropletId)
+        response = retrieveDropletData(dropletId)
         return response
     except Exception as e:
         raise Exception(e)
