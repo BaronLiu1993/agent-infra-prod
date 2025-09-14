@@ -22,7 +22,8 @@ from service.agent.agentService import (
     generateImageGeminiNodeCode
 )
 from service.databricks.databricksService import (
-    dumpDataInDatabricks
+    dumpDataInDatabricks,
+    generateDataBricksTool
 )
 from service.documentation.documentationService import generateDocumentation
 from pydantic import BaseModel
@@ -71,6 +72,7 @@ def generateServiceLayer(request: GenerateServiceRequest):
         agentWorkflowScript += generateLoggingWrappers()
         agentWorkflowScript += generateCodeExecution()
         agentWorkflowScript += generateGoogleToolCalling()
+        agentWorkflowScript += generateDataBricksTool()
 
         # Iterate through each node configuration and generate its code
         for node in request.NodeConfiguration:
@@ -168,7 +170,7 @@ async def uploadDatabricks(file: UploadFile = File(...)):
     try:
         content = await file.read()
         # Preserve the original filename and extension
-        dbfsPath = f"/Volumes/workspace/default/htn/{file.filename}"
+        dbfsPath = f"/Volumes/workspace/default/htn_volume/{file.filename}"
         response = dumpDataInDatabricks(dbfsPath, content)
         return response
     except Exception as e:
