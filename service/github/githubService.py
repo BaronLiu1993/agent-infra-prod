@@ -122,13 +122,13 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          echo "${{{{ secrets.DEPLOY_KEY }}}}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.DROPLET_IP }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{{{ secrets.DROPLET_IP }}}} >> ~/.ssh/known_hosts
 
       - name: Deploy
         run: |
-          ssh root@${{ secrets.DROPLET_IP }} << 'EOF'
+          ssh root@${{{{ secrets.DROPLET_IP }}}} << 'EOF'
             cd /opt/app
             git reset --hard
             git pull origin main
@@ -136,6 +136,7 @@ jobs:
             systemctl restart fastapi
           EOF
 """
+
 
         create = repo.create_file(workflow_path, "Successfully Updated CI workflow", workflow_content)
         print(create)
