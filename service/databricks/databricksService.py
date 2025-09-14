@@ -17,28 +17,15 @@ w=WorkspaceClient(
 print(w.get_workspace_id())
 
 #Dump Files into Databricks
-def dumpDataInDatabricks(data):
-    dataTag = uuid.uuid4()
-    jsonStr = json.dumps(data)
-    dbfsPath = f"/Volumes/workspace/default/htn_volume/{dataTag}.json"
-    encoded_bytes = jsonStr.encode("utf-8")
-    w.files.upload(dbfsPath, encoded_bytes, overwrite=True)
-    return dbfsPath
 
+def dumpDataInDatabricks(path, content):
+    try:
+        w.files.upload(path, content, overwrite=True)
+        return {"message": f"File uploaded to {path}"}
+    except Exception as e:
+        print(e)
+        return { "message": "Internal Server Error", "success": False}
 
-"""
-sample_data = {
-    "id": 1,
-    "name": "Alice",
-    "age": 30,
-    "is_active": True,
-    "scores": [95, 87, 92],
-    "profile": {
-        "department": "Engineering",
-        "skills": ["Python", "SQL", "Databricks"]
-    }
-}
-"""
 
 
 

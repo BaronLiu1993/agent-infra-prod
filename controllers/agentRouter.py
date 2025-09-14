@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, File, UploadFile
 from service.agent.agentService import (
     generateGraphNodeImports, 
     databaseSetup, 
@@ -16,11 +16,18 @@ from service.agent.agentService import (
     generateCodeExecution,
     generateGoogleToolCalling,
     promptComposer, 
-    generateSchema
+    generateSchema,
+    generateVideoGeminiNodeCode,
+    generateImageControllerMethod,
+    generatePictureGeminiNodeCode
+)
+from service.databricks.databricksService import (
+    dumpDataInDatabricks
 )
 from service.documentation.documentationService import generateDocumentation
 from pydantic import BaseModel
 from typing import List, Dict, Any
+import uuid
 
 
 router = APIRouter()
@@ -39,6 +46,7 @@ class GenerateDocumentationRequest(BaseModel):
 class GenerateMainRequest(BaseModel):
     routers: List[str]
     functions: List[Dict[str, Any]]
+    modality: bool
 # The controller will orchestrate
 """
 Example Input 
@@ -98,7 +106,7 @@ def generateServiceLayer(request: GenerateServiceRequest):
                     authToken=node.get("authToken"),
                     searchParams=node.get("searchParams")
                 )
-            elif node_type == "Decision":
+            elif node_type == "DecisionText":
                 schema_code = generateSchema(node.get("inputSchema", {}), node.get("outputSchema", {}))
                 agentWorkflowScript += generateDecisionTextGeminiNodeCode(
                     workflowId=node.get("workflowId"),
@@ -110,6 +118,18 @@ def generateServiceLayer(request: GenerateServiceRequest):
                     prompt=node.get("prompt", ""),
                     schema=schema_code,
                     functionList=node.get("functionList", []),
+                )
+            elif node_type == "DecisionVideo":
+                agentWorkflowScript += generateVideoGeminiNodeCode(
+                    workflowId=node.get("workflowId"),
+                    nodeId=node.get("nodeId"),
+                    prompt=node.get("prompt", ""),
+                )
+            elif node_type == "Image":
+                agentWorkflowScript += generatePictureGeminiNodeCode(
+                    workflowId=node.get("workflowId"),
+                    nodeId=node.get("nodeId"),
+                    prompt=node.get("prompt", ""),
                 )
         return agentWorkflowScript
         
@@ -125,7 +145,11 @@ def generateMainLayer(request: GenerateMainRequest):
         controllerLayer = ""
         controllerLayer += generateControllerConfiguration(request.routers)
         controllerLayer += connectAgents(request.functions)
-        controllerLayer += generateControllerMethod()
+        if request.modality:
+            controllerLayer += generateControllerMethod()
+        else:
+            controllerLayer += generateImageControllerMethod()
+        
         return controllerLayer
     except Exception as e:
         print(e)
@@ -138,5 +162,17 @@ def generateTechnicalDocumentation(documentationConfiguration: GenerateDocumenta
         return documentation
     except Exception as e:
         raise Exception(e)
+    
+@router.post("/upload/")
+async def uploadDatabricks(file: UploadFile = File(...)):
+    try:
+        content = await file.read()
+        # Preserve the original filename and extension
+        dbfsPath = f"/Volumes/workspace/default/htn/{file.filename}"
+        response = dumpDataInDatabricks(dbfsPath, content)
+        return response
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail=str(e))
     
     
