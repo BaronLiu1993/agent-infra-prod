@@ -1,9 +1,6 @@
-import json
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service import jobs
 import os
 from dotenv import load_dotenv
-import uuid
 
 load_dotenv()
 
@@ -61,7 +58,6 @@ def retrieve_chunked_data(query_content: str):
     statementObj = response.json()
     STATEMENT_ID = statementObj["statement_id"]
 
-    # Poll until query finishes
     status_url = f"{{DATABRICKS_INSTANCE}}/api/2.0/sql/statements/{{STATEMENT_ID}}"
 
     while True:

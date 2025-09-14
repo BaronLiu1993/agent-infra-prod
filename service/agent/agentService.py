@@ -37,9 +37,8 @@ from typing import Dict, Any
 import requests
 from datetime import datetime
 import uuid
-
-import requests
 import json
+import os
 
 GEMINI_API_KEY="{GEMINI_API_KEY}"
 OPENAI_API_KEY="{OPENAI_API_KEY}"
