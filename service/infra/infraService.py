@@ -7,6 +7,7 @@ ACCESS = os.environ.get("DIGITALOCEAN_ACCESS")
 SSH_KEY=os.environ.get("DIGITALOCEAN_SSH_FINGERPRINT")
 OPENAI_KEY=os.environ.get("GEMINI_API_KEY")
 GEMINI_KEY=os.environ.get("OPENAI_API_KEY")
+GITHUB_ACCESS=os.environ.get("GITHUB_ACCESS")
 
 
 #Start Up Script is Slow so we need to speeden it up
@@ -28,7 +29,8 @@ apt-get update -y && apt-get install -y git python3-pip docker-compose-plugin
 
 mkdir -p /opt/app
 cd /opt/app
-git clone https://github.com/{userName}/{repoName} .
+git clone https://BaronLiu1993:{GITHUB_ACCESS}@github.com/{userName}/{repoName} .
+
 pip3 install -r requirements.txt
 
 cat <<EOL > /opt/app/docker-compose.yml

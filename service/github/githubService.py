@@ -32,7 +32,7 @@ def createRepository(name: str):
         g=Github(auth=auth)
         user = g.get_user()
         repoCode = uuid.uuid4()
-        repo = user.create_repo(f"{name}-${repoCode}", private = False)
+        repo = user.create_repo(f"{name}-${repoCode}", private = True)
         print(repo)
         return { "message": "Successfully Created Repo", "success": True, "data": repo.full_name}
     except Exception as e:
